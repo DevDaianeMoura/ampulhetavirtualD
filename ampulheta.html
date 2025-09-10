@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ampulheta Virtual</title>
+    <link rel="icon" href="icon.svg">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f7f7f7;
+            margin: 0;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            padding: 40px;
+            border-radius: 20px;
+            background-color: #fff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+       h2 { margin-top: 0; font-size: 2.5em; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; background: linear-gradient(to right, #d4a742, #444, #d4a742); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+        
+        .ampulheta {
+            position: relative;
+            width: 140px;
+            height: 240px;
+            transition: transform 0.5s ease-in-out;
+        }
+        .ampulheta.virada {
+            transform: rotate(180deg);
+        }
+        .ampulheta-topo, .ampulheta-fundo {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            background: transparent;
+            border: 1px solid transparent;
+            border-image: linear-gradient(to bottom, #d4a742, #000) 1;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+        .ampulheta-fundo {
+            top: 50%;
+            transform: rotate(180deg);
+        }
+        .ampulheta-areia-descendo,
+        .ampulheta-areia-subindo {
+            position: absolute;
+            width: 85%;
+            left: 7.5%;
+            background: linear-gradient(to bottom, #d4a742, #ffcc00);
+            height: 45%;
+            clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+        }
+        .ampulheta-areia-descendo {
+            top: 5%;
+        }
+        .ampulheta-areia-subindo {
+            bottom: 5%;
+        }
+        #contador-numerico {
+            font-size: 3em;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 10px;
+        }
+        .botao-principal {
+            padding: 12px 30px;
+            font-size: 17px;
+            cursor: pointer;
+            border: 4px solid transparent;
+            border-image: linear-gradient(to right, #d4a742, #000, #d4a742) 1;
+            border-radius: 5px;
+            background-color: transparent;
+            color: #555;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .botao-principal:hover {
+            background-color: #555;
+            color: #fff;
+        }
+        .botao-principal:disabled {
+            background-color: #ccc;
+            border-color: #ccc;
+            color: #888;
+            cursor: not-allowed;
+        }
+        #pausar-btn {
+            margin-left: 10px;
+        }
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+            transition: opacity 0.3s ease;
+        }
+        .input-container label {
+            font-size: 14px;
+            color: #666;
+        }
+        .input-container input {
+            width: 120px;
+            padding: 8px;
+            font-size: 16px;
+            text-align: center;
+            border: 2px solid transparent;
+            border-image: linear-gradient(to right, #d4a742, #000, #d4a742) 1;
+            border-radius: 5px;
+            outline: none;
+        }
+        #saudacao {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 10px;
+            height: 30px;
+        }
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+        }
+        @keyframes cairAreia {
+            0% { height: 45%; }
+            100% { height: 0%; }
+        }
+        @keyframes acumularAreia {
+            0% { height: 0%; }
+            100% { height: 45%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ampulheta</h2>
+        <div class="ampulheta">
+            <div class="ampulheta-topo"></div>
+            <div class="ampulheta-areia-descendo"></div>
+            <div class="ampulheta-areia-subindo"></div>
+            <div class="ampulheta-fundo"></div>
+        </div>
+        <div id="saudacao"></div>
+        <div id="contador-numerico">60</div>
+        <div id="input-fields">
+            <div id="tempo-input-container" class="input-container">
+                <label for="tempo-input">Definir seg:</label>
+                <input type="requered" id="tempo-input" value="60" min="1">
+            </div>
+        </div>
+        <div>
+            <button id="iniciar-btn" class="botao-principal">Iniciar</button>
+            <button id="pausar-btn" class="botao-principal hidden">Pausar</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const ampulheta = document.querySelector('.ampulheta');
+            const areiaDescendo = document.querySelector('.ampulheta-areia-descendo');
+            const areiaSubindo = document.querySelector('.ampulheta-areia-subindo');
+            const iniciarBtn = document.getElementById('iniciar-btn');
+            const pausarBtn = document.getElementById('pausar-btn');
+            const contadorNumerico = document.getElementById('contador-numerico');
+            const tempoInput = document.getElementById('tempo-input');
+            const tempoInputContainer = document.getElementById('tempo-input-container');
+            const saudacao = document.getElementById('saudacao');
+            
+            const estado = {
+                duracaoTotal: 60,
+                segundosRestantes: 60,
+                estaContando: false,
+                intervaloID: null
+            };
+
+            const aplicarAnimacoesAreia = (animacaoDescendo, animacaoSubindo, duracao) => {
+                areiaDescendo.style.animation = `${animacaoDescendo} ${duracao}s linear forwards`;
+                areiaSubindo.style.animation = `${animacaoSubindo} ${duracao}s linear forwards`;
+                areiaDescendo.style.animationPlayState = 'running';
+                areiaSubindo.style.animationPlayState = 'running';
+            };
+
+            const atualizarContagem = () => {
+                estado.segundosRestantes--;
+                contadorNumerico.textContent = estado.segundosRestantes;
+                if (estado.segundosRestantes <= 0) {
+                    clearInterval(estado.intervaloID);
+                    saudacao.textContent = 'Sua contagem terminou.';
+                    setTimeout(() => {
+                        tempoInputContainer.classList.remove('hidden');
+                        iniciarBtn.classList.remove('hidden');
+                        pausarBtn.textContent = 'Pausar';
+                        pausarBtn.classList.add('hidden');
+                        saudacao.textContent = '';
+                        estado.estaContando = false;
+                        ampulheta.classList.remove('virada');
+                        areiaDescendo.style.animation = 'none';
+                        areiaSubindo.style.animation = 'none';
+                    }, 1000);
+                }
+            };
+
+            const iniciarContagem = () => {
+                estado.duracaoTotal = parseInt(tempoInput.value) || 60;
+                tempoInput.value = estado.duracaoTotal;
+                
+                estado.estaContando = true;
+                iniciarBtn.classList.add('hidden');
+                pausarBtn.classList.remove('hidden');
+                tempoInputContainer.classList.add('hidden');
+                
+                saudacao.textContent = 'Sua contagem começou...';
+                estado.segundosRestantes = estado.duracaoTotal;
+                contadorNumerico.textContent = estado.segundosRestantes;
+                const duracaoDaAreia = estado.duracaoTotal / 2;
+                
+                aplicarAnimacoesAreia('cairAreia', 'acumularAreia', duracaoDaAreia);
+                
+                estado.intervaloID = setInterval(atualizarContagem, 1000);
+                
+                setTimeout(() => {
+                    areiaDescendo.style.animation = 'none';
+                    areiaSubindo.style.animation = 'none';
+                    ampulheta.classList.add('virada');
+
+                    setTimeout(() => {
+                        aplicarAnimacoesAreia('acumularAreia', 'cairAreia', duracaoDaAreia);
+                    }, 500);
+                }, duracaoDaAreia * 1000);
+            };
+
+            const togglePause = () => {
+                if (estado.estaContando) {
+                    clearInterval(estado.intervaloID);
+                    areiaDescendo.style.animationPlayState = 'paused';
+                    areiaSubindo.style.animationPlayState = 'paused';
+                    pausarBtn.textContent = 'Retomar';
+                    estado.estaContando = false;
+                } else {
+                    estado.intervaloID = setInterval(atualizarContagem, 1000);
+                    areiaDescendo.style.animationPlayState = 'running';
+                    areiaSubindo.style.animationPlayState = 'running';
+                    pausarBtn.textContent = 'Pausar';
+                    estado.estaContando = true;
+                }
+            };
+
+            iniciarBtn.addEventListener('click', () => {
+                if (!estado.estaContando) iniciarContagem();
+            });
+
+            pausarBtn.addEventListener('click', togglePause);
+            
+            // Atualização: usar Space para pausar/retomar
+            document.addEventListener('keydown', (event) => {
+                // Espaço para pausa/retomar
+                if (event.code === 'Space') {
+                    // Evita repetição (Chrome)
+                    if (event.repeat) return;
+                    // Não agir se o foco estiver no input de tempo
+                    if (tempoInput && document.activeElement === tempoInput) return;
+                    // Impede o scroll da página
+                    event.preventDefault();
+
+                    if (estado.estaContando) {
+                        togglePause();
+                    } else {
+                        iniciarContagem();
+                    }
+                }
+
+                // Opcional: manter Enter funcionando como alternativa
+                // else if (event.code === 'Enter') {
+                //     if (event.repeat) return;
+                //     if (tempoInput && document.activeElement === tempoInput) return;
+                //     event.preventDefault();
+                //     if (estado.estaContando) togglePause(); else iniciarContagem();
+                // }
+            });
+
+            // Carrega o valor inicial no display
+            contadorNumerico.textContent = tempoInput.value;
+        })();
+    </script>
+</body>
+</html>
