@@ -1,38 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ampulheta Virtual</title>
-    <link rel="icon" href="icon.svg">
-    <link rel="stylesheet" href="style.css">
-    
-</head>
-<body>
-    <div class="container">
-        <h2>Ampulheta</h2>
-        <div class="ampulheta">
-            <div class="ampulheta-topo"></div>
-            <div class="ampulheta-areia-descendo"></div>
-            <div class="ampulheta-areia-subindo"></div>
-            <div class="ampulheta-fundo"></div>
-        </div>
-        <div id="saudacao"></div>
-        <div id="contador-numerico">60</div>
-        <div id="input-fields">
-            <div id="tempo-input-container" class="input-container">
-                <label for="tempo-input">Definir seg:</label>
-                <input type="requered" id="tempo-input" value="60" min="1">
-            </div>
-        </div>
-        <div>
-            <button id="iniciar-btn" class="botao-principal">Iniciar</button>
-            <button id="pausar-btn" class="botao-principal hidden">Pausar</button>
-        </div>
-    </div>
-
-    <script>
-        (function() {
+(function() {
             const ampulheta = document.querySelector('.ampulheta');
             const areiaDescendo = document.querySelector('.ampulheta-areia-descendo');
             const areiaSubindo = document.querySelector('.ampulheta-areia-subindo');
@@ -158,6 +124,3 @@
             // Carrega o valor inicial no display
             contadorNumerico.textContent = tempoInput.value;
         })();
-    </script>
-</body>
-</html>
