@@ -1,3 +1,4 @@
-![Ampulheta](https://raw.githubusercontent.com/DevDaianeMoura/ampulhetavirtualD/main/icon.svg)
+
 ﻿# ampulhetavirtualD
+
 
